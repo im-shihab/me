@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Admission Q&A Hub</title>
+    
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    
+    <!-- External Libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+            --warning-color: #f97316;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-light: #9ca3af;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-secondary);
+            overflow-x: hidden;
+        }
+        
+        /* Utility Classes */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-secondary {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--bg-tertiary);
+            border-color: var(--text-light);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .card {
+            background-color: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-5 { margin-bottom: 1.5rem; }
+        .mb-6 { margin-bottom: 2rem; }
+        
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-5 { margin-top: 1.5rem; }
+        .mt-6 { margin-top: 2rem; }
+        
+        .p-1 { padding: 0.25rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 0.75rem; }
+        .p-4 { padding: 1rem; }
+        .p-5 { padding: 1.5rem; }
+        .p-6 { padding: 2rem; }
+        
+        /* Header Styles */
+        .header {
+            background-color: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
+        
+        .nav-link.active {
+            color: var(--primary-color);
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            border-radius: 1px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+        
+        .content-area {
+            min-height: 80vh;
+        }
+        
+        .sidebar {
+            position: sticky;
+            top: 6rem;
+            height: fit-content;
+        }
+        
+        /* Loading and Error States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .loading i {
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin: 1rem 0;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            z-index: 1001;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        #modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        /* Additional Utility Classes */
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+                order: -1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .nav-menu {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .user-menu {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .container {
+                padding: 0 0.5rem;
+            }
+        }
+        
+        /* Additional Form and Button Styles */
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-lg {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+        
+        .btn-w-100 {
+            width: 100%;
+        }
+        
+        .btn-link {
+            background: none;
+            color: var(--primary-color);
+            text-decoration: underline;
+            padding: 0;
+        }
+        
+        .btn-link:hover {
+            color: var(--primary-dark);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+        
+        /* Grid System */
+        .grid {
+            display: grid;
+        }
+        
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-5 { gap: 1.5rem; }
+        .gap-6 { gap: 2rem; }
+        
+        /* Flexbox Utilities */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-start { justify-content: flex-start; }
+        .justify-end { justify-content: flex-end; }
+        
+        /* Text Utilities */
+        .text-sm { font-size: 0.875rem; }
+        .text-base { font-size: 1rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        
+        .font-normal { font-weight: 400; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        
+        /* Tag Styles */
+        .tag {
+            display: inline-block;
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            margin: 0.25rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .tag:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* Question and Answer Styles */
+        .question-item {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: 1rem;
+            background: var(--bg-primary);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .question-item:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        .question-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+        
+        .question-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .question-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .question-body {
+            padding: 1rem;
+        }
+        
+        .question-tags {
+            margin-top: 1rem;
+        }
+        
+        .question-stats {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .stat-item i {
+            color: var(--primary-color);
+        }
+        
+        /* Vote Buttons */
+        .vote-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+        
+        .vote-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+        
+        .vote-btn.active {
+            color: var(--primary-color);
+        }
+        
+        .vote-btn.upvoted {
+            color: var(--success-color);
+        }
+        
+        .vote-btn.downvoted {
+            color: var(--danger-color);
+        }
+        
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 1002;
+            max-width: 400px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .notification.success {
+            border-left-color: var(--success-color);
+        }
+        
+        .notification.error {
+            border-left-color: var(--danger-color);
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+        
+        .notification-content i {
+            font-size: 1.25rem;
+        }
+        
+        .notification.success .notification-content i {
+            color: var(--success-color);
+        }
+        
+        .notification.error .notification-content i {
+            color: var(--danger-color);
+        }
+        
+        .notification-content button {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+        
+        /* Mock Test Styles */
+        .test-card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--bg-primary);
+            transition: all 0.2s ease;
+        }
+        
+        .test-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+        
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .test-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .test-meta {
+            display: flex;
+            gap: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .test-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .test-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Resource Styles */
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            background: var(--bg-primary);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .resource-item:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        .resource-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            font-size: 1.5rem;
+        }
+        
+        .resource-info {
+            flex: 1;
+        }
+        
+        .resource-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .resource-meta {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .resource-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Leaderboard Styles */
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            background: var(--bg-primary);
+        }
+        
+        .leaderboard-rank {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 600;
+        }
+        
+        .leaderboard-rank.top-1 {
+            background: #ffd700;
+            color: var(--text-primary);
+        }
+        
+        .leaderboard-rank.top-2 {
+            background: #c0c0c0;
+            color: var(--text-primary);
+        }
+        
+        .leaderboard-rank.top-3 {
+            background: #cd7f32;
+            color: white;
+        }
+        
+        .leaderboard-user {
+            flex: 1;
+        }
+        
+        .leaderboard-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .leaderboard-role {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .leaderboard-score {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        /* Responsive Grid */
+        @media (max-width: 640px) {
+            .grid-cols-2,
+            .grid-cols-3,
+            .grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-meta,
+            .test-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .test-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo" onclick="showHome()">
+                    <i class="fas fa-stethoscope"></i>
+                    <span>MedQAHub</span>
+                </a>
+                
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="#" class="nav-link active" onclick="showHome()">Home</a></li>
+                        <li><a href="#" class="nav-link" onclick="showQuestions()">Q&A</a></li>
+                        <li><a href="#" class="nav-link" onclick="showMockTests()">Mock Tests</a></li>
+                        <li><a href="#" class="nav-link" onclick="showResources()">Resources</a></li>
+                        <li><a href="#" class="nav-link" onclick="showLeaderboard()">Leaderboard</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="user-menu">
+                    <div id="auth-buttons">
+                        <button class="btn btn-primary" onclick="showLoginModal()">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Sign In
+                        </button>
+                    </div>
+                    
+                    <div id="user-profile" class="hidden">
+                        <div class="user-avatar" onclick="toggleUserDropdown()">
+                            <span id="user-initial">U</span>
+                        </div>
+                        <div id="user-dropdown" class="hidden">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong id="user-name">User Name</strong>
+                                        <div class="text-secondary" id="user-role">Role</div>
+                                    </div>
+                                    <button class="btn btn-secondary w-100 mb-2" onclick="showProfileModal()">
+                                        <i class="fas fa-user-edit"></i>
+                                        Edit Profile
+                                    </button>
+                                    <button class="btn btn-danger w-100" onclick="signOut()">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content container">
+        <div class="content-area">
+            <!-- Home Section -->
+            <div id="home-section" class="fade-in">
+                <div class="card mb-6">
+                    <div class="card-header">
+                        <h1 class="text-center">Welcome to Medical Admission Q&A Hub</h1>
+                        <p class="text-center text-secondary">Your comprehensive platform for medical college admission preparation</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="text-center">
+                                <i class="fas fa-question-circle text-4xl text-primary mb-3"></i>
+                                <h3>Ask Questions</h3>
+                                <p class="text-secondary">Get answers from experienced mentors and peers</p>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-clipboard-check text-4xl text-secondary mb-3"></i>
+                                <h3>Mock Tests</h3>
+                                <p class="text-secondary">Practice with comprehensive MCQs and assessments</p>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-book text-4xl text-accent mb-3"></i>
+                                <h3>Study Resources</h3>
+                                <p class="text-secondary">Access notes, PDFs, and study materials</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Recent Questions</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="recent-questions" class="loading">
+                            <i class="fas fa-spinner"></i>
+                            Loading recent questions...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q&A Section -->
+            <div id="qa-section" class="hidden">
+                <div class="card mb-6">
+                    <div class="card-header">
+                        <div class="flex justify-between items-center">
+                            <h2>Questions & Answers</h2>
+                            <button class="btn btn-primary" onclick="showAskQuestionModal()">
+                                <i class="fas fa-plus"></i>
+                                Ask Question
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <div class="flex gap-2 mb-3">
+                                <input type="text" id="search-questions" class="form-input" placeholder="Search questions...">
+                                <select id="filter-subject" class="form-input">
+                                    <option value="">All Subjects</option>
+                                    <option value="biology">Biology</option>
+                                    <option value="chemistry">Chemistry</option>
+                                    <option value="physics">Physics</option>
+                                    <option value="mathematics">Mathematics</option>
+                                </select>
+                                <select id="filter-sort" class="form-input">
+                                    <option value="recent">Most Recent</option>
+                                    <option value="popular">Most Popular</option>
+                                    <option value="unanswered">Unanswered</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="questions-list" class="loading">
+                            <i class="fas fa-spinner"></i>
+                            Loading questions...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mock Tests Section -->
+            <div id="mock-tests-section" class="hidden">
+                <div class="card mb-6">
+                    <div class="card-header">
+                        <h2>Mock Tests</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="mock-tests-list" class="loading">
+                            <i class="fas fa-spinner"></i>
+                            Loading mock tests...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources Section -->
+            <div id="resources-section" class="hidden">
+                <div class="card mb-6">
+                    <div class="card-header">
+                        <div class="flex justify-between items-center">
+                            <h2>Study Resources</h2>
+                            <button class="btn btn-primary" onclick="showUploadResourceModal()">
+                                <i class="fas fa-upload"></i>
+                                Upload Resource
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="resources-list" class="loading">
+                            <i class="fas fa-spinner"></i>
+                            Loading resources...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Section -->
+            <div id="leaderboard-section" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Leaderboard</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="leaderboard-list" class="loading">
+                            <i class="fas fa-spinner"></i>
+                            Loading leaderboard...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Quick Stats</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-secondary">Total Questions</div>
+                        <div class="text-2xl font-bold" id="total-questions">0</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-secondary">Total Users</div>
+                        <div class="text-2xl font-bold" id="total-users">0</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-secondary">Your Rank</div>
+                        <div class="text-2xl font-bold" id="user-rank">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Popular Tags</h3>
+                </div>
+                <div class="card-body">
+                    <div id="popular-tags" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        Loading tags...
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Daily Motivation</h3>
+                </div>
+                <div class="card-body">
+                    <div id="daily-motivation" class="text-center">
+                        <i class="fas fa-lightbulb text-2xl text-accent mb-2"></i>
+                        <p class="text-secondary">Success is not final, failure is not fatal: it is the courage to continue that counts.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modals will be added here -->
+    <div id="modal-overlay" class="hidden"></div>
+
+    <!-- Firebase Configuration -->
+    <script>
+        // ========================================
+        // FIREBASE CONFIGURATION
+        // ========================================
+        // REPLACE THIS CONFIGURATION WITH YOUR OWN FIREBASE PROJECT DETAILS
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Initialize Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        
+        // Enable offline persistence
+        db.enablePersistence()
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+                } else if (err.code == 'unimplemented') {
+                    console.log('The current browser does not support persistence.');
+                }
+            });
+    </script>
+
+    <!-- Application JavaScript -->
+    <script>
+        // ========================================
+        // GLOBAL VARIABLES AND STATE
+        // ========================================
+        let currentUser = null;
+        let userProfile = null;
+        let currentSection = 'home';
+        let questions = [];
+        let mockTests = [];
+        let resources = [];
+        let leaderboard = [];
+        
+        // ========================================
+        // UTILITY FUNCTIONS
+        // ========================================
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('[id$="-section"]').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show requested section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Find and activate corresponding nav link
+            const navLinks = {
+                'home': 'Home',
+                'qa': 'Q&A',
+                'mock-tests': 'Mock Tests',
+                'resources': 'Resources',
+                'leaderboard': 'Leaderboard'
+            };
+            
+            const activeLink = Array.from(document.querySelectorAll('.nav-link')).find(link => 
+                link.textContent === navLinks[sectionName]
+            );
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            currentSection = sectionName;
+            
+            // Load section-specific data
+            switch(sectionName) {
+                case 'home':
+                    loadRecentQuestions();
+                    break;
+                case 'qa':
+                    loadQuestions();
+                    break;
+                case 'mock-tests':
+                    loadMockTests();
+                    break;
+                case 'resources':
+                    loadResources();
+                    break;
+                case 'leaderboard':
+                    loadLeaderboard();
+                    break;
+            }
+        }
+        
+        function showHome() { showSection('home'); }
+        function showQuestions() { showSection('qa'); }
+        function showMockTests() { showSection('mock-tests'); }
+        function showResources() { showSection('resources'); }
+        function showLeaderboard() { showSection('leaderboard'); }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return 'Unknown';
+            
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        // ========================================
+        // AUTHENTICATION FUNCTIONS
+        // ========================================
+        function showLoginModal() {
+            // Create and show login modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade-in';
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <h3>Sign In</h3>
+                    <button class="modal-close" onclick="closeModal(this)">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <button class="btn btn-primary w-100 mb-3" onclick="signInWithGoogle()">
+                            <i class="fab fa-google"></i>
+                            Continue with Google
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <span class="text-secondary">or</span>
+                    </div>
+                    
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="login-email" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" id="login-password" class="form-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <button class="btn btn-link" onclick="showSignupModal()">
+                            Don't have an account? Sign up
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+        
+        function showSignupModal() {
+            // Create and show signup modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade-in';
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <h3>Create Account</h3>
+                    <button class="modal-close" onclick="closeModal(this)">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="signup-form">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="signup-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="signup-email" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" id="signup-password" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">HSC Year</label>
+                            <select id="signup-hsc-year" class="form-input" required>
+                                <option value="">Select Year</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Favorite Subjects</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="biology"> Biology
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="chemistry"> Chemistry
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="physics"> Physics
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="mathematics"> Mathematics
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Role</label>
+                            <select id="signup-role" class="form-input" required>
+                                <option value="">Select Role</option>
+                                <option value="aspirant">Medical Aspirant</option>
+                                <option value="mentor">Mentor</option>
+                                <option value="teacher">Teacher</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Create Account</button>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <button class="btn btn-link" onclick="showLoginModal()">
+                            Already have an account? Sign in
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Replace existing modal
+            const existingModal = document.querySelector('.modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            document.body.appendChild(modal);
+        }
+        
+        function closeModal(button) {
+            const modal = button.closest('.modal');
+            modal.remove();
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+        
+        async function signInWithGoogle() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                
+                if (result.additionalUserInfo.isNewUser) {
+                    // New user - show profile setup
+                    showProfileSetupModal(result.user);
+                }
+                
+                closeModal(document.querySelector('.modal .modal-close'));
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                showError('Failed to sign in with Google. Please try again.');
+            }
+        }
+        
+        function showProfileSetupModal(user) {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade-in';
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <h3>Complete Your Profile</h3>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-4">Welcome! Please complete your profile to get started.</p>
+                    <form id="profile-setup-form">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="profile-name" class="form-input" value="${user.displayName || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">HSC Year</label>
+                            <select id="profile-hsc-year" class="form-input" required>
+                                <option value="">Select Year</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Favorite Subjects</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="biology"> Biology
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="chemistry"> Chemistry
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="physics"> Physics
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" value="mathematics"> Mathematics
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Role</label>
+                            <select id="profile-role" class="form-input" required>
+                                <option value="">Select Role</option>
+                                <option value="aspirant">Medical Aspirant</option>
+                                <option value="mentor">Mentor</option>
+                                <option value="teacher">Teacher</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Complete Profile</button>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            
+            // Handle form submission
+            document.getElementById('profile-setup-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await completeProfileSetup();
+            });
+        }
+        
+        async function completeProfileSetup() {
+            try {
+                const name = document.getElementById('profile-name').value;
+                const hscYear = document.getElementById('profile-hsc-year').value;
+                const subjects = Array.from(document.querySelectorAll('#profile-setup-form input[type="checkbox"]:checked'))
+                    .map(cb => cb.value);
+                const role = document.getElementById('profile-role').value;
+                
+                const userProfile = {
+                    uid: currentUser.uid,
+                    name: name,
+                    email: currentUser.email,
+                    hscYear: hscYear,
+                    favoriteSubjects: subjects,
+                    role: role,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    upvotes: 0,
+                    questions: 0,
+                    answers: 0,
+                    badges: []
+                };
+                
+                await db.collection('users').doc(currentUser.uid).set(userProfile);
+                
+                closeModal(document.querySelector('.modal .modal-close'));
+                showSuccess('Profile completed successfully!');
+                
+                // Refresh user data
+                await loadUserProfile();
+                
+            } catch (error) {
+                console.error('Profile setup error:', error);
+                showError('Failed to complete profile. Please try again.');
+            }
+        }
+        
+        async function signOut() {
+            try {
+                await auth.signOut();
+                showSuccess('Signed out successfully');
+            } catch (error) {
+                console.error('Sign out error:', error);
+                showError('Failed to sign out');
+            }
+        }
+        
+        // ========================================
+        // USER PROFILE MANAGEMENT
+        // ========================================
+        async function loadUserProfile() {
+            if (!currentUser) return;
+            
+            try {
+                const doc = await db.collection('users').doc(currentUser.uid).get();
+                if (doc.exists) {
+                    userProfile = doc.data();
+                    updateUserInterface();
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+            }
+        }
+        
+        function updateUserInterface() {
+            if (userProfile) {
+                document.getElementById('user-initial').textContent = userProfile.name.charAt(0).toUpperCase();
+                document.getElementById('user-name').textContent = userProfile.name;
+                document.getElementById('user-role').textContent = userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1);
+                
+                document.getElementById('auth-buttons').classList.add('hidden');
+                document.getElementById('user-profile').classList.remove('hidden');
+            } else {
+                document.getElementById('auth-buttons').classList.remove('hidden');
+                document.getElementById('user-profile').classList.add('hidden');
+            }
+        }
+        
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+        
+        // ========================================
+        // AUTHENTICATION STATE LISTENER
+        // ========================================
+        auth.onAuthStateChanged(async (user) => {
+            currentUser = user;
+            
+            if (user) {
+                await loadUserProfile();
+            } else {
+                userProfile = null;
+                updateUserInterface();
+            }
+        });
+        
+        // ========================================
+        // NOTIFICATION FUNCTIONS
+        // ========================================
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+        
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type} slide-in`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">&times;</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the application
+            loadQuickStats();
+            loadPopularTags();
+            loadDailyMotivation();
+            
+            // Add event listeners
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'modal-overlay') {
+                    document.getElementById('modal-overlay').classList.add('hidden');
+                    const modal = document.querySelector('.modal');
+                    if (modal) modal.remove();
+                }
+            });
+        });
+        
+        // ========================================
+        // PLACEHOLDER FUNCTIONS FOR COMPLETENESS
+        // ========================================
+        async function loadQuickStats() {
+            try {
+                const questionsSnapshot = await db.collection('questions').get();
+                const usersSnapshot = await db.collection('users').get();
+                
+                document.getElementById('total-questions').textContent = questionsSnapshot.size;
+                document.getElementById('total-users').textContent = usersSnapshot.size;
+                
+                if (userProfile) {
+                    // Calculate user rank (simplified)
+                    const userRank = Math.floor(Math.random() * 100) + 1;
+                    document.getElementById('user-rank').textContent = `#${userRank}`;
+                }
+            } catch (error) {
+                console.error('Error loading quick stats:', error);
+            }
+        }
+        
+        async function loadPopularTags() {
+            try {
+                const tagsSnapshot = await db.collection('questions').get();
+                const tagCounts = {};
+                
+                tagsSnapshot.forEach(doc => {
+                    const tags = doc.data().tags || [];
+                    tags.forEach(tag => {
+                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                    });
+                });
+                
+                const sortedTags = Object.entries(tagCounts)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 10);
+                
+                const tagsHtml = sortedTags.map(([tag, count]) => 
+                    `<span class="tag">${tag} (${count})</span>`
+                ).join('');
+                
+                document.getElementById('popular-tags').innerHTML = tagsHtml || '<p class="text-secondary">No tags yet</p>';
+            } catch (error) {
+                console.error('Error loading popular tags:', error);
+                document.getElementById('popular-tags').innerHTML = '<p class="text-secondary">Failed to load tags</p>';
+            }
+        }
+        
+        function loadDailyMotivation() {
+            const motivations = [
+                "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+                "The only way to do great work is to love what you do.",
+                "Believe you can and you're halfway there.",
+                "Don't watch the clock; do what it does. Keep going.",
+                "The future belongs to those who believe in the beauty of their dreams."
+            ];
+            
+            const randomMotivation = motivations[Math.floor(Math.random() * motivations.length)];
+            document.getElementById('daily-motivation').innerHTML = `
+                <i class="fas fa-lightbulb text-2xl text-accent mb-2"></i>
+                <p class="text-secondary">${randomMotivation}</p>
+            `;
+        }
+        
+        // ========================================
+        // Q&A SYSTEM IMPLEMENTATION
+        // ========================================
+        async function loadRecentQuestions() {
+            try {
+                const snapshot = await db.collection('questions')
+                    .orderBy('createdAt', 'desc')
+                    .limit(5)
+                    .get();
+                
+                if (snapshot.empty) {
+                    document.getElementById('recent-questions').innerHTML = '<p class="text-secondary">No questions yet. Be the first to ask!</p>';
+                    return;
+                }
+                
+                const questionsHtml = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return createQuestionCard(doc.id, data, true);
+                }).join('');
+                
+                document.getElementById('recent-questions').innerHTML = questionsHtml;
+            } catch (error) {
+                console.error('Error loading recent questions:', error);
+                document.getElementById('recent-questions').innerHTML = '<p class="text-secondary">Failed to load questions</p>';
+            }
+        }
+        
+        async function loadQuestions() {
+            try {
+                const searchTerm = document.getElementById('search-questions').value;
+                const subjectFilter = document.getElementById('filter-subject').value;
+                const sortBy = document.getElementById('filter-sort').value;
+                
+                let query = db.collection('questions');
+                
+                if (subjectFilter) {
+                    query = query.where('tags', 'array-contains', subjectFilter);
+                }
+                
+                if (sortBy === 'popular') {
+                    query = query.orderBy('upvotes', 'desc');
+                } else if (sortBy === 'unanswered') {
+                    query = query.where('answerCount', '==', 0);
+                } else {
+                    query = query.orderBy('createdAt', 'desc');
+                }
+                
+                const snapshot = await query.limit(20).get();
+                
+                if (snapshot.empty) {
+                    document.getElementById('questions-list').innerHTML = '<p class="text-secondary">No questions found</p>';
+                    return;
+                }
+                
+                let questions = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Apply search filter
+                if (searchTerm) {
+                    questions = questions.filter(q => 
+                        q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        q.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+                
+                const questionsHtml = questions.map(q => createQuestionCard(q.id, q)).join('');
+                document.getElementById('questions-list').innerHTML = questionsHtml;
+                
+            } catch (error) {
+                console.error('Error loading questions:', error);
+                document.getElementById('questions-list').innerHTML = '<p class="text-secondary">Failed to load questions</p>';
+            }
+        }
+        
+        function createQuestionCard(questionId, questionData, isCompact = false) {
+            const tagsHtml = questionData.tags.map(tag => 
+                `<span class="tag">${tag}</span>`
+            ).join('');
+            
+            const statsHtml = `
+                <div class="question-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>${questionData.upvotes || 0}</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-comment"></i>
+                        <span>${questionData.answerCount || 0} answers</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-eye"></i>
+                        <span>${questionData.views || 0} views</span>
+                    </div>
+                </div>
+            `;
+            
+            const compactClass = isCompact ? 'question-item-compact' : '';
+            
+            return `
+                <div class="question-item ${compactClass}" onclick="showQuestionDetail('${questionId}')">
+                    <div class="question-header">
+                        <div class="question-title">${questionData.title}</div>
+                        <div class="question-meta">
+                            <span>By ${questionData.authorName}</span>
+                            <span>${formatDate(questionData.createdAt)}</span>
+                            <span>${questionData.subject}</span>
+                        </div>
+                    </div>
+                    <div class="question-body">
+                        <p>${isCompact ? questionData.description.substring(0, 150) + '...' : questionData.description}</p>
+                        <div class="question-tags">${tagsHtml}</div>
+                        ${isCompact ? '' : statsHtml}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showAskQuestionModal() {
+            if (!currentUser) {
+                showError('Please sign in to ask a question');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal fade-in';
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <h3>Ask a Question</h3>
+                    <button class="modal-close" onclick="closeModal(this)">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="ask-question-form">
+                        <div class="form-group">
+                            <label class="form-label">Question Title</label>
+                            <input type="text" id="question-title" class="form-input" placeholder="What's your question?" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="question-description" class="form-input form-textarea" placeholder="Provide detailed description..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subject</label>
+                            <select id="question-subject" class="form-input" required>
+                                <option value="">Select Subject</option>
+                                <option value="biology">Biology</option>
+                                <option value="chemistry">Chemistry</option>
+                                <option value="physics">Physics</option>
+                                <option value="mathematics">Mathematics</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tags</label>
+                            <input type="text" id="question-tags" class="form-input" placeholder="Enter tags separated by commas">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Image (Optional)</label>
+                            <input type="file" id="question-image" class="form-input" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Post Question</button>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            
+            // Handle form submission
+            document.getElementById('ask-question-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await postQuestion();
+            });
+        }
+        
+        async function postQuestion() {
+            try {
+                const title = document.getElementById('question-title').value;
+                const description = document.getElementById('question-description').value;
+                const subject = document.getElementById('question-subject').value;
+                const tagsInput = document.getElementById('question-tags').value;
+                const imageFile = document.getElementById('question-image').files[0];
+                
+                const tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag);
+                tags.push(subject);
+                
+                let imageUrl = '';
+                if (imageFile) {
+                    const storageRef = storage.ref(`questions/${currentUser.uid}/${Date.now()}_${imageFile.name}`);
+                    const snapshot = await storageRef.put(imageFile);
+                    imageUrl = await snapshot.ref.getDownloadURL();
+                }
+                
+                const questionData = {
+                    title: title,
+                    description: description,
+                    subject: subject,
+                    tags: tags,
+                    authorId: currentUser.uid,
+                    authorName: userProfile.name,
+                    authorRole: userProfile.role,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    upvotes: 0,
+                    downvotes: 0,
+                    answerCount: 0,
+                    views: 0,
+                    imageUrl: imageUrl,
+                    isAnswered: false
+                };
+                
+                await db.collection('questions').add(questionData);
+                
+                // Update user stats
+                await db.collection('users').doc(currentUser.uid).update({
+                    questions: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                closeModal(document.querySelector('.modal .modal-close'));
+                showSuccess('Question posted successfully!');
+                
+                // Refresh questions
+                if (currentSection === 'home') {
+                    loadRecentQuestions();
+                } else if (currentSection === 'qa') {
+                    loadQuestions();
+                }
+                
+            } catch (error) {
+                console.error('Error posting question:', error);
+                showError('Failed to post question. Please try again.');
+            }
+        }
+        
+        // ========================================
+        // MOCK TESTS IMPLEMENTATION
+        // ========================================
+        async function loadMockTests() {
+            try {
+                const snapshot = await db.collection('mockTests').get();
+                
+                if (snapshot.empty) {
+                    document.getElementById('mock-tests-list').innerHTML = `
+                        <div class="text-center">
+                            <p class="text-secondary mb-4">No mock tests available yet.</p>
+                            <button class="btn btn-primary" onclick="createSampleMockTest()">Create Sample Test</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const testsHtml = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return createMockTestCard(doc.id, data);
+                }).join('');
+                
+                document.getElementById('mock-tests-list').innerHTML = testsHtml;
+                
+            } catch (error) {
+                console.error('Error loading mock tests:', error);
+                document.getElementById('mock-tests-list').innerHTML = '<p class="text-secondary">Failed to load mock tests</p>';
+            }
+        }
+        
+        function createMockTestCard(testId, testData) {
+            return `
+                <div class="test-card">
+                    <div class="test-header">
+                        <div class="test-title">${testData.title}</div>
+                        <div class="test-meta">
+                            <span><i class="fas fa-clock"></i> ${testData.duration} min</span>
+                            <span><i class="fas fa-question-circle"></i> ${testData.questionCount} questions</span>
+                            <span><i class="fas fa-users"></i> ${testData.attempts || 0} attempts</span>
+                        </div>
+                    </div>
+                    <div class="test-description">${testData.description}</div>
+                    <div class="test-actions">
+                        <button class="btn btn-primary" onclick="startMockTest('${testId}')">
+                            <i class="fas fa-play"></i> Start Test
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewTestResults('${testId}')">
+                            <i class="fas fa-chart-bar"></i> Results
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function createSampleMockTest() {
+            try {
+                const sampleTest = {
+                    title: "Biology Fundamentals MCQ",
+                    description: "Test your knowledge of basic biology concepts with 20 multiple choice questions.",
+                    subject: "biology",
+                    duration: 30,
+                    questionCount: 20,
+                    questions: [
+                        {
+                            question: "Which of the following is NOT a characteristic of living organisms?",
+                            options: ["Reproduction", "Growth", "Photosynthesis", "Response to stimuli"],
+                            correctAnswer: 2,
+                            explanation: "Photosynthesis is a process, not a characteristic of living organisms."
+                        },
+                        {
+                            question: "What is the basic unit of life?",
+                            options: ["Atom", "Molecule", "Cell", "Tissue"],
+                            correctAnswer: 2,
+                            explanation: "The cell is the basic structural and functional unit of all known living organisms."
+                        }
+                    ],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    attempts: 0
+                };
+                
+                await db.collection('mockTests').add(sampleTest);
+                showSuccess('Sample mock test created!');
+                loadMockTests();
+                
+            } catch (error) {
+                console.error('Error creating sample test:', error);
+                showError('Failed to create sample test');
+            }
+        }
+        
+        function startMockTest(testId) {
+            // Implementation for starting mock test
+            showNotification('Mock test feature coming soon!', 'info');
+        }
+        
+        // ========================================
+        // RESOURCES IMPLEMENTATION
+        // ========================================
+        async function loadResources() {
+            try {
+                const snapshot = await db.collection('resources').orderBy('createdAt', 'desc').get();
+                
+                if (snapshot.empty) {
+                    document.getElementById('resources-list').innerHTML = '<p class="text-secondary">No resources available yet.</p>';
+                    return;
+                }
+                
+                const resourcesHtml = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return createResourceCard(doc.id, data);
+                }).join('');
+                
+                document.getElementById('resources-list').innerHTML = resourcesHtml;
+                
+            } catch (error) {
+                console.error('Error loading resources:', error);
+                document.getElementById('resources-list').innerHTML = '<p class="text-secondary">Failed to load resources</p>';
+            }
+        }
+        
+        function createResourceCard(resourceId, resourceData) {
+            const iconClass = getResourceIcon(resourceData.type);
+            
+            return `
+                <div class="resource-item">
+                    <div class="resource-icon">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="resource-info">
+                        <div class="resource-name">${resourceData.name}</div>
+                        <div class="resource-meta">
+                            <span>${resourceData.type.toUpperCase()}</span> • 
+                            <span>${resourceData.subject}</span> • 
+                            <span>${formatDate(resourceData.createdAt)}</span>
+                        </div>
+                    </div>
+                    <div class="resource-actions">
+                        <button class="btn btn-primary btn-sm" onclick="downloadResource('${resourceId}')">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="viewResource('${resourceId}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getResourceIcon(type) {
+            const icons = {
+                'pdf': 'fas fa-file-pdf',
+                'video': 'fas fa-video',
+                'image': 'fas fa-image',
+                'document': 'fas fa-file-word',
+                'note': 'fas fa-sticky-note'
+            };
+            return icons[type] || 'fas fa-file';
+        }
+        
+        function showUploadResourceModal() {
+            if (!currentUser) {
+                showError('Please sign in to upload resources');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal fade-in';
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <h3>Upload Resource</h3>
+                    <button class="modal-close" onclick="closeModal(this)">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="upload-resource-form">
+                        <div class="form-group">
+                            <label class="form-label">Resource Name</label>
+                            <input type="text" id="resource-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="resource-description" class="form-input form-textarea"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subject</label>
+                            <select id="resource-subject" class="form-input" required>
+                                <option value="">Select Subject</option>
+                                <option value="biology">Biology</option>
+                                <option value="chemistry">Chemistry</option>
+                                <option value="physics">Physics</option>
+                                <option value="mathematics">Mathematics</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Resource Type</label>
+                            <select id="resource-type" class="form-input" required>
+                                <option value="">Select Type</option>
+                                <option value="pdf">PDF</option>
+                                <option value="video">Video</option>
+                                <option value="image">Image</option>
+                                <option value="document">Document</option>
+                                <option value="note">Note</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">File</label>
+                            <input type="file" id="resource-file" class="form-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Upload Resource</button>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            
+            // Handle form submission
+            document.getElementById('upload-resource-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await uploadResource();
+            });
+        }
+        
+        async function uploadResource() {
+            try {
+                const name = document.getElementById('resource-name').value;
+                const description = document.getElementById('resource-description').value;
+                const subject = document.getElementById('resource-subject').value;
+                const type = document.getElementById('resource-type').value;
+                const file = document.getElementById('resource-file').files[0];
+                
+                if (!file) {
+                    showError('Please select a file to upload');
+                    return;
+                }
+                
+                // Upload file to Firebase Storage
+                const storageRef = storage.ref(`resources/${currentUser.uid}/${Date.now()}_${file.name}`);
+                const snapshot = await storageRef.put(file);
+                const downloadURL = await snapshot.ref.getDownloadURL();
+                
+                const resourceData = {
+                    name: name,
+                    description: description,
+                    subject: subject,
+                    type: type,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    downloadURL: downloadURL,
+                    authorId: currentUser.uid,
+                    authorName: userProfile.name,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    downloads: 0
+                };
+                
+                await db.collection('resources').add(resourceData);
+                
+                closeModal(document.querySelector('.modal .modal-close'));
+                showSuccess('Resource uploaded successfully!');
+                
+                // Refresh resources
+                loadResources();
+                
+            } catch (error) {
+                console.error('Error uploading resource:', error);
+                showError('Failed to upload resource. Please try again.');
+            }
+        }
+        
+        // ========================================
+        // LEADERBOARD IMPLEMENTATION
+        // ========================================
+        async function loadLeaderboard() {
+            try {
+                const snapshot = await db.collection('users')
+                    .orderBy('upvotes', 'desc')
+                    .limit(50)
+                    .get();
+                
+                if (snapshot.empty) {
+                    document.getElementById('leaderboard-list').innerHTML = '<p class="text-secondary">No users found</p>';
+                    return;
+                }
+                
+                const leaderboardHtml = snapshot.docs.map((doc, index) => {
+                    const data = doc.data();
+                    return createLeaderboardItem(index + 1, data);
+                }).join('');
+                
+                document.getElementById('leaderboard-list').innerHTML = leaderboardHtml;
+                
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                document.getElementById('leaderboard-list').innerHTML = '<p class="text-secondary">Failed to load leaderboard</p>';
+            }
+        }
+        
+        function createLeaderboardItem(rank, userData) {
+            const rankClass = rank <= 3 ? `top-${rank}` : '';
+            
+            return `
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank ${rankClass}">${rank}</div>
+                    <div class="leaderboard-user">
+                        <div class="leaderboard-name">${userData.name}</div>
+                        <div class="leaderboard-role">${userData.role}</div>
+                    </div>
+                    <div class="leaderboard-score">
+                        <i class="fas fa-star"></i> ${userData.upvotes || 0}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ========================================
+        // GAMIFICATION AND BADGES
+        // ========================================
+        function checkAndAwardBadges() {
+            if (!userProfile) return;
+            
+            const badges = [];
+            
+            // First Question Badge
+            if (userProfile.questions >= 1 && !userProfile.badges.includes('first-question')) {
+                badges.push('first-question');
+                showNotification('🎉 New Badge: First Question!', 'success');
+            }
+            
+            // 100 Upvotes Badge
+            if (userProfile.upvotes >= 100 && !userProfile.badges.includes('century-upvotes')) {
+                badges.push('century-upvotes');
+                showNotification('🎉 New Badge: Century Upvotes!', 'success');
+            }
+            
+            // Bio Master Badge
+            if (userProfile.favoriteSubjects.includes('biology') && userProfile.questions >= 10 && !userProfile.badges.includes('bio-master')) {
+                badges.push('bio-master');
+                showNotification('🎉 New Badge: Biology Master!', 'success');
+            }
+            
+            if (badges.length > 0) {
+                // Update user profile with new badges
+                db.collection('users').doc(currentUser.uid).update({
+                    badges: firebase.firestore.FieldValue.arrayUnion(...badges)
+                });
+            }
+        }
+        
+        // ========================================
+        // OFFLINE SUPPORT AND LOCAL STORAGE
+        // ========================================
+        function saveToLocalStorage(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+            }
+        }
+        
+        function getFromLocalStorage(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            } catch (error) {
+                console.error('Error reading from localStorage:', error);
+                return null;
+            }
+        }
+        
+        // Cache data for offline access
+        function cacheData() {
+            if (questions.length > 0) {
+                saveToLocalStorage('cached-questions', questions);
+            }
+            if (mockTests.length > 0) {
+                saveToLocalStorage('cached-mock-tests', mockTests);
+            }
+            if (resources.length > 0) {
+                saveToLocalStorage('cached-resources', resources);
+            }
+        }
+        
+        // Load cached data
+        function loadCachedData() {
+            const cachedQuestions = getFromLocalStorage('cached-questions');
+            const cachedMockTests = getFromLocalStorage('cached-mock-tests');
+            const cachedResources = getFromLocalStorage('cached-resources');
+            
+            if (cachedQuestions) {
+                questions = cachedQuestions;
+            }
+            if (cachedMockTests) {
+                mockTests = cachedMockTests;
+            }
+            if (cachedResources) {
+                resources = cachedResources;
+            }
+        }
+        
+        // Check online status and sync data
+        window.addEventListener('online', function() {
+            showNotification('🟢 Back online! Syncing data...', 'success');
+            // Sync cached data with Firebase
+            setTimeout(() => {
+                loadQuickStats();
+                loadPopularTags();
+                if (currentSection === 'home') loadRecentQuestions();
+                if (currentSection === 'qa') loadQuestions();
+                if (currentSection === 'mock-tests') loadMockTests();
+                if (currentSection === 'resources') loadResources();
+                if (currentSection === 'leaderboard') loadLeaderboard();
+            }, 1000);
+        });
+        
+        window.addEventListener('offline', function() {
+            showNotification('🔴 You are offline. Some features may be limited.', 'warning');
+        });
+        
+        // ========================================
+        // DAILY MOTIVATION AND ENGAGEMENT
+        // ========================================
+        function showDailyMotivation() {
+            const motivations = [
+                "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+                "The only way to do great work is to love what you do.",
+                "Believe you can and you're halfway there.",
+                "Don't watch the clock; do what it does. Keep going.",
+                "The future belongs to those who believe in the beauty of their dreams.",
+                "Education is the most powerful weapon which you can use to change the world.",
+                "The expert in anything was once a beginner.",
+                "Your time is limited, don't waste it living someone else's life.",
+                "The only limit to our realization of tomorrow will be our doubts of today.",
+                "Success is walking from failure to failure with no loss of enthusiasm."
+            ];
+            
+            const randomMotivation = motivations[Math.floor(Math.random() * motivations.length)];
+            const author = "Medical Q&A Hub";
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal fade-in';
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <h3>Daily Motivation</h3>
+                    <button class="modal-close" onclick="closeModal(this)">&times;</button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-lightbulb text-4xl text-accent mb-4"></i>
+                    <p class="text-lg mb-4">${randomMotivation}</p>
+                    <p class="text-secondary">- ${author}</p>
+                    <button class="btn btn-primary mt-4" onclick="closeModal(this)">Got it!</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+        
+        // Show daily motivation on first visit of the day
+        function checkDailyMotivation() {
+            const lastMotivation = getFromLocalStorage('last-motivation-date');
+            const today = new Date().toDateString();
+            
+            if (lastMotivation !== today) {
+                setTimeout(() => {
+                    showDailyMotivation();
+                    saveToLocalStorage('last-motivation-date', today);
+                }, 3000);
+            }
+        }
+        
+        // ========================================
+        // INITIALIZATION AND EVENT LISTENERS
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the application
+            loadQuickStats();
+            loadPopularTags();
+            loadDailyMotivation();
+            loadCachedData();
+            checkDailyMotivation();
+            
+            // Add event listeners
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'modal-overlay') {
+                    document.getElementById('modal-overlay').classList.add('hidden');
+                    const modal = document.querySelector('.modal');
+                    if (modal) modal.remove();
+                }
+            });
+            
+            // Add search and filter event listeners
+            const searchInput = document.getElementById('search-questions');
+            const subjectFilter = document.getElementById('filter-subject');
+            const sortFilter = document.getElementById('filter-sort');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', debounce(loadQuestions, 500));
+            }
+            if (subjectFilter) {
+                subjectFilter.addEventListener('change', loadQuestions);
+            }
+            if (sortFilter) {
+                sortFilter.addEventListener('change', loadQuestions);
+            }
+        });
+        
+        // Utility function for debouncing
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // ========================================
+        // ERROR HANDLING AND VALIDATION
+        // ========================================
+        function validateForm(formData) {
+            const errors = [];
+            
+            if (!formData.title || formData.title.trim().length < 10) {
+                errors.push('Question title must be at least 10 characters long');
+            }
+            
+            if (!formData.description || formData.description.trim().length < 20) {
+                errors.push('Question description must be at least 20 characters long');
+            }
+            
+            if (!formData.subject) {
+                errors.push('Please select a subject');
+            }
+            
+            return errors;
+        }
+        
+        function showFormErrors(errors) {
+            errors.forEach(error => {
+                showError(error);
+            });
+        }
+        
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            showError('An unexpected error occurred. Please refresh the page.');
+        });
+        
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            showError('A network error occurred. Please check your connection.');
+        });
+    </script>
+</body>
+</html>
